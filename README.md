@@ -1,13 +1,13 @@
 # workmail-intercepter-excel-to-csv
 
-## Transform incoming AWS Workmail email with Excel attachment to CSV and save to S3 bucket
+## Transform incoming AWS WorkMail email with Excel attachment to CSV and save to S3 bucket
 
 ### Goals
 - Automate data ingestion when it's delivered by email
 - Transform the data before storage
 
 ### Prerequisites
-- Workmail email
+- WorkMail email
 - An existing S3 bucket to hold the CloudFormation template and Lambda source code
 - An existing S3 bucket to hold the files
 
@@ -24,7 +24,7 @@ We will be using Lambda layers below from [Klayers](https://github.com/keithroza
 ### Lambda Function Deployment
 The Lambda function `lambda/app.py` is written in Python, it's self-explanatory. Modify it to your need.
 
-We want to provision the function using CloudFormation, so that all the infrasturcture is in code. Hence follow the steps below.
+We want to provision the function using CloudFormation, so that all the infrastructure is in code. Hence follow the steps below.
 
 #### Modify `template.yaml`
 ```
@@ -73,7 +73,7 @@ REGION=us-east-1
 ### WorkMail configurations
 Go to __Amazon WorkMail__ :: __Organization Settings__ :: __Inbound rules__ :: __Create new inbound rule__ as screenshot below.
 
-![Workmail inbound rule](workmail-inbound-rule.png)
+![WorkMail inbound rule](workmail-inbound-rule.png)
 
 ### Finally
 Send a test email with .xslx attachment to your WorkMail email. You should have the attachment file automatically intercepted, transformed, cataloged and saved to S3.
