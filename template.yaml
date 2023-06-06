@@ -1,0 +1,98 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: -<
+  Creates a Lambda function to intercept Excel in WorkMail and save to S3 bucket as CSV.
+
+Parameters:
+  AppName:
+    Type: String
+    Default: workmail-intercepter-excel-to-csv
+    Description: The application name.
+
+  OriginFile:
+    Type: String
+    Default: attachment.xlsx
+    Description: -<
+      The name of the original file.
+      It can be any name but must ends with .xlsx extension.
+
+  DestinationFile:
+    Type: String
+    Default: report.csv
+    Description: -<
+      The file name to save in the S3 bucket. Must ends with .csv extension.
+
+  DestinationBucket:
+    Type: String
+    Default: workmail-intercepter-excel-to-csv
+    Description: The destination bucket.
+
+  WorkMailOrganizationId:
+    Type: String
+    Default: REPLACE-ME
+    Description: The WorkMail organization ID.
+
+Resources:
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref AppName
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Layers:
+        # https://github.com/keithrozario/Klayers
+        - arn:aws:lambda:us-east-1:770693421928:layer:Klayers-p39-pandas:9
+        - arn:aws:lambda:us-east-1:770693421928:layer:Klayers-p39-numpy:9
+        - arn:aws:lambda:us-east-1:770693421928:layer:Klayers-p38-openpyxl:1
+      Timeout: 900
+      MemorySize: 256
+      TracingConfig:
+        Mode: Active
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          DESTINATION_BUCKET: !Ref DestinationBucket
+          DESTINATION_FILE: !Ref DestinationFile
+          ORIGIN_FILE: !Ref OriginFile
+      Role: !GetAtt LambdaFunctionRole.Arn
+      Code: ./lambda
+      Description: -<
+        Creates a Lambda function to intercept Excel in WorkMail and save to S3 bucket as CSV.
+
+  LambdaFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AppName}-${AWS::Region}-lambda-role
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonWorkMailMessageFlowFullAccess
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+
+  LambdaFunctionRolePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:PutObject
+              - s3:PutObjectAcl
+            Resource: !Sub arn:aws:s3:::${DestinationBucket}/*
+      Roles:
+        - !Ref LambdaFunctionRole
+      PolicyName: !Sub ${AppName}-lambda-policy
+
+  WorkMailPermissionToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LambdaFunction
+      Principal: !Sub workmail.${AWS::Region}.amazonaws.com
+      SourceArn: !Sub arn:aws:workmail:${AWS::Region}:${AWS::AccountId}:organization/${WorkMailOrganizationId}
