@@ -1,19 +1,19 @@
 # workmail-intercepter-excel-to-csv
 
-## Transform incomig AWS Workmail email with Excel attachement to CSV and save to S3 bucket
+## Transform incoming AWS Workmail email with Excel attachment to CSV and save to S3 bucket
 
 ### Goals
 - Automate data ingestion when it's delivered by email
 - Transform the data before storage
 
-### Prerequsites
+### Prerequisites
 - Workmail email
 - An existing S3 bucket to hold the CloudFormation template and Lambda source code
-- An exsiting S3 bucket to hold the files
+- An existing S3 bucket to hold the files
 
 ### Limitation of the code
-- The Lambda included on process one Excel attachment in .xlsx format. You can extend the code to process any number of attachments in any format.
-- If you do have a lot of attachements, recommended way is to only download the files and send messages to SQS to have a separate Lambda to transform the data.
+- The Lambda included only processes one Excel attachment in .xlsx format. You can extend the code to process any number of attachments in any format.
+- If you do have a lot of attachments, recommended way is to only download the files and send messages to SQS to have a separate Lambda to transform the data.
 
 ### Lambda Layers
 We will be using Lambda layers below from [Klayers](https://github.com/keithrozario/Klayers):
@@ -21,7 +21,11 @@ We will be using Lambda layers below from [Klayers](https://github.com/keithroza
 - numpy
 - openyxl
 
-### Lambda Deployment
+### Lambda Function Deployment
+The Lambda function `lambda/app.py` is written in Python, it's self-explanatory. Modify it to your need.
+
+We want to provision the function using CloudFormation, so that all the infrasturcture is in code. Hence follow the steps below.
+
 #### Modify `template.yaml`
 ```
 Parameters:
@@ -72,7 +76,7 @@ Go to __Amazon WorkMail__ :: __Organization Settings__ :: __Inbound rules__ :: _
 ![Workmail inbound rule](workmail-inbound-rule.png)
 
 ### Finally
-Send a test email with .xslx attachment to your WorkMail email. You should have the attachment file automatically intercepted, tranformed, cataloged and saved to S3.
+Send a test email with .xslx attachment to your WorkMail email. You should have the attachment file automatically intercepted, transformed, cataloged and saved to S3.
 
 ![S3 bucket](s3-bucket.png)
 
